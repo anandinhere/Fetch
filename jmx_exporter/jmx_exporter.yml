@@ -1,0 +1,9 @@
+---
+lowercaseOutputLabelNames: true
+rules:
+  - pattern: "kafka.server<type=(.*), name=(.*)><>(Count|Value)"
+    name: kafka_$1_$2
+    type: GAUGE
+  - pattern: "kafka.consumer<type=(.*), clientId=(.*)><>(Count|Value)"
+    name: kafka_consumer_$1_$2
+    type: GAUGE

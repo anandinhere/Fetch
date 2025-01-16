@@ -1,0 +1,81 @@
+version: '2'
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+    networks:
+      - kafka-network
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    ports:
+      - 9092:9092
+      - 29092:29092
+    networks:
+      - kafka-network
+    environment:
+      KAFKA_BROKER_ID: 0
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: LISTENER_INTERNAL://kafka:9092,LISTENER_EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: LISTENER_INTERNAL:PLAINTEXT,LISTENER_EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: LISTENER_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar=9999:/opt/jmx_exporter/jmx_exporter.yml"
+    volumes:
+      - ./jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar:/opt/jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar
+      - ./jmx_exporter/jmx_exporter.yml:/opt/jmx_exporter/jmx_exporter.yml
+  my-python-producer:
+    image: mpradeep954/fetch-de-data-gen
+    depends_on:
+      - kafka
+    restart: on-failure:10
+    ports:
+      - 9093:9093
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_TOPIC: user-login
+    networks:
+      - kafka-network
+
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    networks:
+      - kafka-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_NAME=Main Org.
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana-datasources:/etc/grafana/provisioning/datasources
+      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards
+    depends_on:
+      - prometheus
+    networks:
+      - kafka-network
+    restart: unless-stopped
+
+
+networks:
+  kafka-network:
+    driver: bridge
