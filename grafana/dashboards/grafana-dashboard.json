@@ -140,7 +140,7 @@
           },
           "disableTextWrap": false,
           "editorMode": "builder",
-          "expr": "rate(kafka_BrokerTopicMetrics_MessagesInPerSec_topic_user_login{instance=\"kafka:9999\"}[$__rate_interval])",
+          "expr": "rate(kafka_BrokerTopicMetrics_MessagesInPerSec_topic_user_login{instance=\"kafka:9998\"}[$__rate_interval])",
           "fullMetaSearch": false,
           "includeNullMetadata": true,
           "legendFormat": "__auto",

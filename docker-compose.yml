@@ -27,14 +27,21 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar=9999:/opt/jmx_exporter/jmx_exporter.yml"
+      KAFKA_OPTS: "-javaagent:/opt/jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar=9998:/opt/jmx_exporter/jmx_exporter.yml"
     volumes:
-      - ./jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar:/opt/jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar
-      - ./jmx_exporter/jmx_exporter.yml:/opt/jmx_exporter/jmx_exporter.yml
+      - ./kafka/jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar:/opt/jmx_exporter/jmx_prometheus_javaagent-1.1.0.jar
+      - ./kafka/jmx_exporter/jmx_exporter.yml:/opt/jmx_exporter/jmx_exporter.yml
+    healthcheck:
+      test: ["CMD", "sh", "-c", "unset KAFKA_OPTS && unset JMX_PORT && kafka-topics --bootstrap-server kafka:9092 --list"]
+      interval: 15s
+      timeout: 5s
+      retries: 15
+
   my-python-producer:
     image: mpradeep954/fetch-de-data-gen
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
     restart: on-failure:10
     ports:
       - 9093:9093
@@ -48,7 +55,7 @@ services:
     image: prom/prometheus:latest
     container_name: prometheus
     volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
       - "9090:9090"
     networks:
@@ -67,14 +74,28 @@ services:
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana-datasources:/etc/grafana/provisioning/datasources
-      - ./grafana-dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
     depends_on:
       - prometheus
     networks:
       - kafka-network
     restart: unless-stopped
 
+  kafka-consumer:
+    build:
+      context: ./consumer
+      dockerfile: Dockerfile
+    environment:
+      BROKER: "kafka:9092"  # Kafka broker address
+      INPUT_TOPIC: "user-login"
+      KAFKA_TOPIC_ANALYTICS: "user_login_analytics"
+      BOOTSTRAP_SERVERS: "kafka:9092"
+    restart: on-failure:10
+    depends_on:
+      - my-python-producer
+    networks:
+      - kafka-network
 
 networks:
   kafka-network:
