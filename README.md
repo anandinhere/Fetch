@@ -14,6 +14,7 @@ docker-compose up --detach
 ### **Access Services**:
 - **Prometheus**: [http://localhost:9090](http://localhost:9090)
 - **Grafana**: [http://localhost:3000](http://localhost:3000) (Default credentials: `admin/admin`)
+- **Grafana Dashboard**: [Dashboard](http://localhost:3000/d/fetch/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser) 
 
 ### **Stop the Pipeline**:
 ```bash
@@ -99,7 +100,7 @@ Prometheus collects the following key metrics from the consumer application:
 
 ### Visualization with Grafana
 The Grafana dashboard provides detailed analytics and trends:
-- Accessible at: [http://localhost:3000/d/Fetch-Dashboard/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser](http://localhost:3000/d/Fetch-Dashboard/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser)
+- Accessible at: [Link to Grafana dashboard](http://localhost:3000/d/fetch/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser)
 - Displays metrics like:
   - Event processing rates.
   - Device type distribution.
