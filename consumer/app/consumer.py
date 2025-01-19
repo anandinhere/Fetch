@@ -5,7 +5,7 @@ import os
 from collections import Counter
 from kafka.admin import KafkaAdminClient, NewTopic
 from confluent_kafka import Consumer, Producer, KafkaError
-from prometheus_client import Counter, generate_latest, REGISTRY, start_http_server
+from prometheus_client import generate_latest, REGISTRY, start_http_server, Gauge
 
 
 # Kafka configuration
@@ -13,11 +13,12 @@ BROKER = "kafka:9092"
 INPUT_TOPIC = "user-login"
 OUTPUT_TOPIC = "user_login_analytics"
 GROUP_ID = "consumer-group-1"
-DEVICE_TYPE_COUNTER = Counter('device_type_count', 'Device type count', ['device_type'])
-LOCALE_COUNTER = Counter('locale_count', 'Locale count', ['locale'])
+DEVICE_TYPE_COUNTER = Gauge('device_type_count', 'Device type count', ['device_type', 'topic'])
+LOCALE_COUNTER = Gauge('locale_count', 'Locale count', ['locale', 'topic'])
+TOTAL_COUNTER = Gauge('total_count', 'Total count', ['record_type', 'topic'])
 
 
-# Define a function to configure the Kafka consumer
+# function to configure the Kafka consumer
 def create_consumer():
     return Consumer({
         'bootstrap.servers': BROKER,
@@ -25,33 +26,9 @@ def create_consumer():
         'auto.offset.reset': 'earliest'
     })
 
-# Define a function to configure the Kafka producer
+# function to configure the Kafka producer
 def create_producer():
     return Producer({'bootstrap.servers': BROKER})
-
-# Processing function: Filter, transform, and aggregate data
-def process_message(message):
-    try:
-        # Parse the message
-        data = json.loads(message)
-
-        # Filter: Ignore messages with None device_type
-
-
-        # Transform: Add a processed timestamp
-        data['processed_timestamp'] = int(time.time())
-
-        # Aggregation Example: Count android vs iOS (not implemented here, but you could add it)
-        if not data.get('device_type'):
-            data['device_type'] = 'unknown'
-        else:
-            data['device_type'] = data['device_type'].lower()  # Normalize device type
-
-        # Return processed data
-        return data
-    except json.JSONDecodeError:
-        print("Failed to decode message:", message)
-        return None
 
 # Main function
 def main():
@@ -63,10 +40,10 @@ def main():
     analytics_topic = os.environ.get('KAFKA_TOPIC_ANALYTICS', 'user_login_analytics')
     admin_client = KafkaAdminClient(bootstrap_servers=bootstrap_servers)
 
-    # Check if the 'user-login' topic exists
+    # Check if the 'user_login_analytics' topic exists
     topic_exists = analytics_topic in admin_client.list_topics()
 
-    # Create the 'user-login' topic if it doesn't exist
+    # Create the 'user_login_analytics' topic if it doesn't exist
     if not topic_exists:
         new_topic = NewTopic(name=analytics_topic, num_partitions=1, replication_factor=1)
         try:
@@ -98,7 +75,7 @@ def main():
             if not data_batch:
                 continue
             data_batch.append(msg)
-            # Process data every 0 seconds
+            # Process data every 20 seconds
             if time.time() - start_time >= 20:
 
                 # Processing time
@@ -109,7 +86,7 @@ def main():
                 locale_counter = Counter(record["locale"] for record in data_batch)
                 total_count = len(data_batch)
 
-                # Output aggregation records
+                # compute aggregation records
                 device_type_aggregations = [
                     {"processing_time": processing_time, "record_type": "device_type", "count": count, "device_type": device_type}
                     for device_type, count in device_type_counter.items()
@@ -124,7 +101,7 @@ def main():
                     "processing_time": processing_time, "record_type": "total", "count": total_count
                 }
 
-                # Combine all aggregations
+                # combine all aggregations
                 all_aggregations = device_type_aggregations + locale_aggregations + [total_aggregation]
 
                 print(json.dumps(all_aggregations, indent=4))
@@ -133,9 +110,11 @@ def main():
                     for aggregation in all_aggregations:
                         # Produce each aggregation record to the output topic as a separate message
                         if aggregation['record_type'] == 'device_type':
-                            DEVICE_TYPE_COUNTER.labels(device_type=aggregation['device_type'], topic=analytics_topic).inc(aggregation['count'])
+                            DEVICE_TYPE_COUNTER.labels(device_type=aggregation['device_type'], topic=analytics_topic).set(aggregation['count'])
                         if aggregation['record_type'] == 'locale':
-                            LOCALE_COUNTER.labels(locale=aggregation['locale'], topic=analytics_topic).inc(aggregation['count'])
+                            LOCALE_COUNTER.labels(locale=aggregation['locale'], topic=analytics_topic).set(aggregation['count'])
+                        if aggregation['record_type'] == 'total':
+                            TOTAL_COUNTER.labels(record_type='total', topic=analytics_topic).set(aggregation['count'])
                         producer.produce(
                             analytics_topic,
                             key="aggregations",
@@ -143,8 +122,7 @@ def main():
                         )
 
                 # Send metrics to Prometheus
-                print(generate_latest(REGISTRY))
-
+                generate_latest(REGISTRY)
                 producer.flush()  # Ensure all messages are sent
 
 
@@ -157,7 +135,6 @@ def main():
         print("\nShutting down...")
     finally:
         consumer.close()
-        producer.close()
 
 if __name__ == "__main__":
     start_http_server(9997)
