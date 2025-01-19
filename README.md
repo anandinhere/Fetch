@@ -1,68 +1,14 @@
 # Fetch
 
-## Description
-
-The **Fetch** application is a Kafka-based data processing pipeline designed to generate, process, and monitor user login events. It uses Kafka topics to handle the ingestion, aggregation, and publication of analytics data, with integrated monitoring tools like Prometheus and Grafana for real-time visualization and performance insights.
-
-### Key Features:
-1. **Data Generation**:
-   - The producer simulates user login events and publishes them to the Kafka topic `user-login`.
-
-2. **Data Processing**:
-   - A consumer application polls the `user-login` topic every 20 seconds.
-   - Aggregates data on:
-     - `locale`: Tracks the geographic origin of logins.
-     - `device_type`: Categorizes logins by device type (e.g., mobile, desktop).
-     - `total records`: Computes the total number of login events.
-   - The aggregated results are published to the Kafka topic `user-login-analytics`.
-
-3. **Monitoring and Visualization**:
-   - Aggregated metrics are exposed as Prometheus metrics, which are scraped and stored for analysis.
-   - Grafana dashboards visualize these metrics, offering insights into:
-     - Login trends by device type.
-     - Geographic distribution of user logins.
-     - Overall system throughput and performance.
-
-### Prometheus Metrics
-Prometheus collects the following key metrics from the consumer application:
-- `device_type_count`: Tracks the number of events for each device type.
-- `locale_count`: Monitors the number of events by geographic locale.
-- `total_count`: Measures the total number of processed events.
-
-### Visualization with Grafana
-The Grafana dashboard provides detailed analytics and trends:
-- Accessible at: [http://localhost:3000/d/Fetch-Dashboard/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser](http://localhost:3000/d/Fetch-Dashboard/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser)
-- Displays metrics like:
-  - Event processing rates.
-  - Device type distribution.
-  - Geographic distribution of user logins.
-
-### Use Case Scenarios
-1. **Real-Time Analytics**:
-   - Monitor user login activity in real-time to identify peak usage periods or geographic patterns.
-   
-2. **Scalability Testing**:
-   - Evaluate system performance under high load conditions using simulated events.
-
-3. **System Health Monitoring**:
-   - Track pipeline performance and detect issues (e.g., consumer lag, data loss) using Prometheus metrics.
-
-### Summary
-Fetch combines Kafka's robust messaging capabilities with Prometheus and Grafana for a highly scalable and observable analytics pipeline. It ensures real-time processing of login events, offering both operational metrics and business insights.
-
-
 
 ## Executing the Project
-
-
-## **How to Run**
 
 ### **Prerequisites**:
 - Docker and Docker Compose installed.
 
 ### **Start the Pipeline**:
 ```bash
-docker-compose up -d
+docker-compose up --detach
 ```
 
 ### **Access Services**:
@@ -103,7 +49,61 @@ Sample for records produced by  'my-python-producer-1'
 ---
 
 
-## **Monitoring Metrics**
+# **Overview of Analytics Pipeline**
+
+## Description
+
+The **Fetch** application is a Kafka-based data processing pipeline designed to generate, process, and monitor user login events. It uses Kafka topics to handle the ingestion, aggregation, and publication of analytics data, with integrated monitoring tools like Prometheus and Grafana for real-time visualization and performance insights.
+
+
+## **Key Components**
+1. **Kafka and Zookeeper**:
+   - Manages the message queue and coordinates distributed components.
+   - Provides durability and scalability for message streams.
+
+2. **Producer** (`my-python-producer`):
+   - Generates user login events and pushes them to the `user-login` Kafka topic.
+
+3. **Consumer** (`kafka-consumer`):
+   - Aggregates data from the `user-login` topic and produces analytics to the `user_login_analytics` topic.
+   - Sends metrics (e.g., device type and locale counts) to Prometheus for monitoring.
+
+4. **Prometheus and Grafana**:
+   - Prometheus scrapes metrics from the consumer to monitor pipeline performance.
+   - Grafana visualizes metrics and provides real-time dashboards.
+   
+### Key Features:
+1. **Data Generation**:
+   - The producer simulates user login events and publishes them to the Kafka topic `user-login`.
+
+2. **Data Processing**:
+   - A consumer application polls the `user-login` topic every 20 seconds.
+   - Aggregates data on:
+     - `locale`: Tracks the geographic origin of logins.
+     - `device_type`: Categorizes logins by device type (e.g., mobile, desktop).
+     - `total records`: Computes the total number of login events.
+   - The aggregated results are published to the Kafka topic `user-login-analytics`.
+
+3. **Monitoring and Visualization**:
+   - Aggregated metrics are exposed as Prometheus metrics, which are scraped and stored for analysis.
+   - Grafana dashboards visualize these metrics, offering insights into:
+     - Login trends by device type.
+     - Geographic distribution of user logins.
+     - Overall system throughput and performance.
+
+### Prometheus Metrics
+Prometheus collects the following key metrics from the consumer application:
+- `device_type_count`: Tracks the number of events for each device type.
+- `locale_count`: Monitors the number of events by geographic locale.
+- `total_count`: Measures the total number of processed events.
+
+### Visualization with Grafana
+The Grafana dashboard provides detailed analytics and trends:
+- Accessible at: [http://localhost:3000/d/Fetch-Dashboard/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser](http://localhost:3000/d/Fetch-Dashboard/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser)
+- Displays metrics like:
+  - Event processing rates.
+  - Device type distribution.
+  - Geographic distribution of user logins.
 
 ### **Key Metrics Exposed**:
 1. **`device_type_count`**:
@@ -118,12 +118,40 @@ Sample for records produced by  'my-python-producer-1'
    - Labels: `record_type`, `topic`.
    - Tracks the total number of processed events.
 
-### **Visualizing in Grafana**:
-- Dashboards display metrics trends and pipeline health.
-- Grafana dashboard is at:  
-  [http://localhost:3000/d/Fetch-Dashboard/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser]
+---  
+
+
+## **Data Flow**
+1. **Event Generation**:
+   - The producer publishes user login events to the Kafka topic `user-login`.
+
+2. **Consumption and Aggregation**:
+   - The consumer reads events from `user-login`, processes them in batches, and computes aggregations (e.g., device type counts, locale counts).
+   - Aggregated data is sent to the `user_login_analytics` topic.
+
+3. **Monitoring**:
+   - Metrics (e.g., `device_type_count`, `locale_count`, and `total_count`) are exposed to Prometheus via a custom HTTP server.
+
+4. **Visualization**:
+   - Grafana displays pipeline performance metrics (e.g., processing rates, event counts) on dashboards.
+
+
+### Use Case Scenarios
+1. **Real-Time Analytics**:
+   - Monitor user login activity in real-time to identify peak usage periods or geographic patterns.
+   
+2. **Scalability Testing**:
+   - Evaluate system performance under high load conditions using simulated events.
+
+3. **System Health Monitoring**:
+   - Track pipeline performance and detect issues (e.g., consumer lag, data loss) using Prometheus metrics.
+
+
 
 ---
+
+
+
 
 
 ## Changes Made to the Provided `docker-compose.yml`
@@ -152,44 +180,6 @@ Sample for records produced by  'my-python-producer-1'
 These changes enhance the monitoring, visualization, and data processing capabilities of the application, making it more robust and production-ready.
 
 
-
-
-
-# **Overview of Analytics Pipeline**
-
-This project implements a Kafka-based data processing pipeline to consume, aggregate, and produce analytics from user login events. The architecture is containerized using Docker Compose, with support for monitoring via Prometheus and Grafana.
-
-## **Key Components**
-1. **Kafka and Zookeeper**:
-   - Manages the message queue and coordinates distributed components.
-   - Provides durability and scalability for message streams.
-
-2. **Producer** (`my-python-producer`):
-   - Generates user login events and pushes them to the `user-login` Kafka topic.
-
-3. **Consumer** (`kafka-consumer`):
-   - Aggregates data from the `user-login` topic and produces analytics to the `user_login_analytics` topic.
-   - Sends metrics (e.g., device type and locale counts) to Prometheus for monitoring.
-
-4. **Prometheus and Grafana**:
-   - Prometheus scrapes metrics from the consumer to monitor pipeline performance.
-   - Grafana visualizes metrics and provides real-time dashboards.
-
-## **Data Flow**
-1. **Event Generation**:
-   - The producer publishes user login events to the Kafka topic `user-login`.
-
-2. **Consumption and Aggregation**:
-   - The consumer reads events from `user-login`, processes them in batches, and computes aggregations (e.g., device type counts, locale counts).
-   - Aggregated data is sent to the `user_login_analytics` topic.
-
-3. **Monitoring**:
-   - Metrics (e.g., `device_type_count`, `locale_count`, and `total_count`) are exposed to Prometheus via a custom HTTP server.
-
-4. **Visualization**:
-   - Grafana displays pipeline performance metrics (e.g., processing rates, event counts) on dashboards.
-
----
 
 ## **Design Choices**
 

@@ -549,13 +549,13 @@
     "list": []
   },
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "browser",
   "title": "Fetch-Dashboard",
-  "uid": "Fetch-Dashboard",
+  "uid": "PBFA97CFB590B2094",
   "version": 1,
   "weekStart": ""
 }
