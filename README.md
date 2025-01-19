@@ -24,13 +24,14 @@ docker-compose down
 ---
 
 
-This creates the following containers in the Docker-Compose stack named 'fetch':
+This creates the following containers in the Docker-Compose stack named "Fetch":
 
 1. **kafka-1**: Kafka broker.
 2. **my-python-producer-1**: Generates user login events.
 3. **zookeeper-1**: Coordinates the Kafka cluster.
 4. **prometheus**: Monitors the pipeline and scrapes metrics.
 5. **grafana**: Visualizes Prometheus metrics in dashboards.
+6. **kafka-consumer-1**: A consumer application that polls the `user-login` topic every 20 seconds. Sends aggregations to `user_login_analytics` kafka topic and prometheus.
 
 
 Sample for records produced by  'my-python-producer-1' 
@@ -148,10 +149,7 @@ The Grafana dashboard provides detailed analytics and trends:
    - Track pipeline performance and detect issues (e.g., consumer lag, data loss) using Prometheus metrics.
 
 
-
 ---
-
-
 
 
 
