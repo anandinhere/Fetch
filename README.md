@@ -4,7 +4,7 @@
 ## Executing the Project
 
 ### **Prerequisites**:
-- Docker and Docker Compose installed.
+- docker and docker-compose installed.
 
 ### **Start the Pipeline**:
 ```bash
