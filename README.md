@@ -18,7 +18,7 @@ sudo docker-compose up --detach
 - **Prometheus**: [http://localhost:9090](http://localhost:9090)
 - **Grafana**: [http://localhost:3000](http://localhost:3000) (Default credentials: `admin/admin`)
 - **Grafana**: [Dashboard](http://localhost:3000/d/fetch/fetch-dashboard?orgId=1&from=now-15m&to=now&timezone=browser) 
-- **Sample Dashboard**: ![Fetch](./images/fetch-grafana-dashboard.png)
+- **Sample Dashboard**: Metrics should begin appearing approximately 3 minutes after the containers start. ![Fetch](./images/fetch-grafana-dashboard.png)
 
 
 ### **Stop the Pipeline**:
