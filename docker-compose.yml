@@ -82,9 +82,7 @@ services:
     restart: unless-stopped
 
   kafka-consumer:
-    build:
-      context: ./consumer
-      dockerfile: Dockerfile
+    image: anandinher/images:kafka-consumer-1.0
     environment:
       BROKER: "kafka:9092"  # Kafka broker address
       INPUT_TOPIC: "user-login"

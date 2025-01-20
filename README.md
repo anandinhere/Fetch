@@ -210,6 +210,12 @@ These changes enhance the monitoring, visualization, and data processing capabil
   - With the depends_on condition, the producer and consumer wait until Kafka passes its health check.
   - This avoids failures in producers and consumers trying to connect to Kafka before it is ready to accept connections.
   
+- **Pre-Built Custom Image**:
+  - The custom consumer image has already been built and pushed to a personal Docker Hub repository.
+  - Docker Compose is configured to pull this pre-built image directly, avoiding the overhead of rebuilding the image during startup.
+  - This approach speeds up deployment and ensures consistency across environments.
+  
+  
 
 
 ### 1.  How to deploy this application in production?
