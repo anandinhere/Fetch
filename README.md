@@ -4,11 +4,14 @@
 ## Executing the Project
 
 ### **Prerequisites**:
-- Docker and Docker Compose installed.
+- docker and docker-compose installed.
+- clone this repo and navigate to the repo's root directory 'Fetch'
 
 ### **Start the Pipeline**:
 ```bash
-docker-compose up --detach
+sudo docker compose up --detach
+or
+sudo docker-compose up --detach
 ```
 
 ### **Access Services**:
