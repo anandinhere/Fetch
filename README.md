@@ -22,7 +22,9 @@ sudo docker-compose up --detach
 
 ### **Stop the Pipeline**:
 ```bash
-docker-compose down
+sudo docker-compose down
+or 
+sudo docker compose down
 ```
 
 ---
